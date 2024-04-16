@@ -2,27 +2,40 @@
 
 Code for paper [Distilling Step-by-Step! Outperforming Larger Language Models with Less Training Data and Smaller Model Sizes](https://arxiv.org/abs/2305.02301)
 
+## This code is to perform an indepth analysis and replication of the claimed results on the paper cited above.
+
+## Team details:
+
+1. Nikhil Dilip Dhore G01383804
+2. Anish Kumar Saranga G01376251
+3. Sai Srivathsa Muthyala G01391091
+
 ## Environment Setup
-- Setup Conda environment:
+
+- Setup environment and install dependencies:
+
 ```
-conda create --name distill python=3.10.6 -y
-conda activate distill
-conda install -y pytorch==1.12.1 torchvision==0.13.1 torchaudio==0.12.1 cudatoolkit=11.3 -c pytorch
-pip install git+https://github.com/huggingface/transformers@v4.24.0 datasets sentencepiece protobuf==3.20.* tensorboardX
+pip install -r requirements.txt
 ```
+
+packages include: pytorch, torchaudio, torchvision, transformers etc.
+
 - Extract datasets to `datasets/`:
+
 ```
 unzip datasets.zip
 ```
 
 ## Command Usages
+
 #### Args usages
+
 - `--from_pretrained`: `google/t5-v1_1-small`, `google/t5-v1_1-base`, `google/t5-v1_1-large`, `google/t5-v1_1-xxl`
-- `--dataset`: `esnli`, `anli1`, `cqa`, `svamp`
+- `--dataset`: `esnli`, `anli1`, `cqa`
 - `--label_type`:
   - `--label_type gt`: Use GT label for training
   - `--label_type llm`: Use LLM predicted label for training
-- `--alpha`: Task weight for multi-task training. Loss = alpha * label_prediction_loss + (1 - alpha) * rationale_generation_loss
+- `--alpha`: Task weight for multi-task training. Loss = alpha _ label_prediction_loss + (1 - alpha) _ rationale_generation_loss
   - `--alpha 0.5`: recommended
 - `--batch_size`: Batch size
 - `--grad_steps`: Gradient accumulation step
@@ -35,33 +48,46 @@ unzip datasets.zip
   - `task_prefix`: Distilling step-by-step
 - `--parallelize`: Model parallelism
 
-
 #### Example usages
+
 - Standard finetuning:
+
 ```python
 python run.py --from_pretrained google/t5-v1_1-base --dataset cqa --model_type standard --label_type gt --batch_size 64
 ```
 
-
 - Distilling step-by-step with `GT label` and `PaLM rationale`:
+
 ```python
 python run.py --from_pretrained google/t5-v1_1-base --dataset cqa --model_type task_prefix --label_type gt --llm palm --alpha 0.5 --batch_size 64
 ```
 
-
 - Standard distillation:
+
 ```python
 python run.py --from_pretrained google/t5-v1_1-base --dataset cqa --model_type standard --label_type llm --batch_size 64
 ```
 
-
 - Distilling step-by-step with `PaLM label` and `PaLM rationale`:
+
 ```python
 python run.py --from_pretrained google/t5-v1_1-base --dataset cqa --model_type task_prefix --label_type llm --llm palm --alpha 0.5 --batch_size 64
 ```
 
+#### If you want to directly reproduce all the results, a bash file can be executed as below. Note that this includes dealing with all the combinations of above given commands, so will take very long time to run even on high capacity of GPUs.
+
+```
+./execute.sh
+```
+
+#### Some analysis done include performance of T5_base model on Ground Truth and LLM generated labels on varying sizes of training data.
+
+![alt text](image.png)
+
 ## Cite
-If you find this repository useful, please consider citing:
+
+If you find the paper interesting, please consider citing the authors:
+
 ```bibtex
 @article{hsieh2023distilling,
   title={Distilling step-by-step! outperforming larger language models with less training data and smaller model sizes},
@@ -70,6 +96,3 @@ If you find this repository useful, please consider citing:
   year={2023}
 }
 ```
-
-
-Test sentence
