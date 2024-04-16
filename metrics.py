@@ -20,13 +20,6 @@ def compute_text_acc(preds, labels):
     return np.mean(np.array(preds) == np.array(labels))
 
 
-def compute_equation_acc(preds, labels):
-    preds = [eval_equation(pred) for pred in preds]
-    labels = [eval_equation(label) for label in labels]
-
-    return np.mean(np.array(preds) == np.array(labels))
-
-
 def eval_equation(equation):
     try:
         answer = eval(equation)

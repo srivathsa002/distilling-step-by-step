@@ -18,7 +18,7 @@ import re
 import json
 import numpy as np
 
-from datasets import Dataset, DatasetDict, load_dataset
+from datasets import Dataset, load_dataset
 
 
 DATASET_ROOT = 'datasets'
@@ -26,7 +26,7 @@ DATASET_ROOT = 'datasets'
 
 class DatasetLoader(object):
     def __init__(self, dataset_name, source_dataset_name, dataset_version, has_valid, split_map,
-                 batch_size, train_batch_idxs, test_batch_idxs, valid_batch_idxs=None):
+                batch_size, train_batch_idxs, test_batch_idxs, valid_batch_idxs=None):
         self.data_root = DATASET_ROOT
         self.dataset_name = dataset_name
         self.source_dataset_name = source_dataset_name
@@ -138,7 +138,7 @@ class CQADatasetLoader(DatasetLoader):
         test_batch_idxs = range(2)
 
         super().__init__(dataset_name, source_dataset_name, dataset_version, has_valid, split_map,
-                 batch_size, train_batch_idxs, test_batch_idxs, valid_batch_idxs=None)
+                batch_size, train_batch_idxs, test_batch_idxs, valid_batch_idxs=None)
 
 
     def _post_process(self, datasets):
@@ -199,154 +199,6 @@ class CQADatasetLoader(DatasetLoader):
         return rationale, label
 
 
-class SVAMPDatasetLoader(DatasetLoader):
-    def __init__(self):
-        dataset_name = 'svamp'
-        source_dataset_name = 'svamp'
-        dataset_version = None
-        has_valid = False
-        split_map = {
-            'train': 'train',
-            'test': 'test',
-        }
-        batch_size = 500
-        train_batch_idxs = range(2)
-        test_batch_idxs = range(1)
-
-
-        super().__init__(dataset_name, source_dataset_name, dataset_version, has_valid, split_map,
-                 batch_size, train_batch_idxs, test_batch_idxs, valid_batch_idxs=None)
-
-
-    def load_from_source(self):
-        with open(f'{self.data_root}/{self.dataset_name}/SVAMP.json') as f:
-            original_dataset = json.load(f)
-
-        dataset = list()
-        for data in original_dataset:
-            input = f'{data["Body"]}\n{data["Question"]}'
-            equation = data["Equation"]
-
-            dataset.append({
-                'input': input,
-                'label': equation,
-            })
-
-        idxs = np.random.RandomState(seed=0).permutation(len(dataset))
-        train_idxs = idxs[:800]
-        test_idxs = idxs[800:]
-
-        train_dataset = Dataset.from_list(np.array(dataset)[train_idxs].tolist())
-        test_dataset = Dataset.from_list(np.array(dataset)[test_idxs].tolist())
-
-        datasets = DatasetDict({
-            'train': train_dataset,
-            'test': test_dataset
-        })
-
-        return datasets
-        
-
-    def _post_process(self, datasets):
-        return datasets
-
-
-    def _parse_llm_output(self, output):
-        rationale_label = output.split('Q:')[0]
-        rationale_label = rationale_label.rstrip()
-        try:
-            rationale, label = rationale_label.split('The answer is')
-        except:
-            rationale = ' '
-            label = ' '
-            return rationale, label
-            
-        rationale = rationale.rstrip()
-        try:
-            label = re.search(r'\(.*\)', label).group(0)
-        except:
-            label = ' '
-
-        return rationale, label
-
-    def _parse_gpt_output(self, output):
-        rationale_label = output.split('Q:')[0]
-        rationale_label = rationale_label.rstrip().lstrip()
-        try:
-            rationale, label = rationale_label.split('The answer is')
-        except:
-            rationale = ' '
-            label = ' '
-            return rationale, label
-            
-        rationale = rationale.rstrip()
-        try:
-            label = re.search(r'\(.*\)', label).group(0)
-        except:
-            label = ' '
-
-        return rationale, label
-
-
-class ASDivDatasetLoader(DatasetLoader):
-    def __init__(self):
-        dataset_name = 'asdiv'
-        dataset_version = None
-        has_valid = False
-        split_map = {
-            'train': 'train',
-            'test': 'test',
-        }
-        batch_size = 1000
-        train_batch_idxs = range(3)
-        test_batch_idxs = range(1)
-
-        super().__init__(dataset_name, dataset_version, has_valid, split_map,
-                 batch_size, train_batch_idxs, test_batch_idxs, valid_batch_idxs=None)
-
-
-    def load_from_source(self):
-        raise NotImplementedError
-        
-
-    def _post_process(self, datasets):
-
-        def prepare_input(example):
-            example['input'] = example['Body'] + '\n' + example['Question']
-            answer = example['Answer'].split(' ')[0]
-            example['label'] = answer
-
-            return example
-
-        datasets = datasets.map(prepare_input)
-        datasets = datasets.remove_columns(['Body', 'Question', 'Formula', 'Answer'])
-
-        return datasets
-
-
-    def _parse_llm_output(self, output):
-        rationale_label = output.split('Q:')[0]
-        rationale_label = rationale_label.rstrip()
-        try:
-            rationale, label = rationale_label.split('The answer is')
-        except:
-            rationale = ' '
-            label = ' '
-            return rationale, label
-            
-        rationale = rationale.rstrip()
-        try:
-            label = re.search(r'\(.*\)', label).group(0)
-        except:
-            label = ' '
-
-        return rationale, label
-
-
-    def _parse_gpt_output(self, output):
-        raise NotImplementedError
-
-
 class ESNLIDatasetLoader(DatasetLoader):
     def __init__(self, subset='full'):
         dataset_name = 'esnli'
@@ -369,7 +221,7 @@ class ESNLIDatasetLoader(DatasetLoader):
         valid_batch_idxs = range(2)
 
         super().__init__(dataset_name, source_dataset_name, dataset_version, has_valid, split_map,
-                 batch_size, train_batch_idxs, test_batch_idxs, valid_batch_idxs=valid_batch_idxs)
+                batch_size, train_batch_idxs, test_batch_idxs, valid_batch_idxs=valid_batch_idxs)
 
 
     def _post_process(self, datasets):
@@ -412,10 +264,10 @@ class ESNLIDatasetLoader(DatasetLoader):
 
 class ANLIDatasetLoader(DatasetLoader):
     def __init__(self, dataset_name, source_dataset_name, dataset_version, has_valid, split_map,
-                 batch_size, train_batch_idxs, test_batch_idxs, valid_batch_idxs):
+                batch_size, train_batch_idxs, test_batch_idxs, valid_batch_idxs):
 
         super().__init__(dataset_name, source_dataset_name, dataset_version, has_valid, split_map,
-                 batch_size, train_batch_idxs, test_batch_idxs, valid_batch_idxs=valid_batch_idxs)
+                batch_size, train_batch_idxs, test_batch_idxs, valid_batch_idxs=valid_batch_idxs)
 
     def _post_process(self, datasets):
         
@@ -481,7 +333,7 @@ class ANLI1DatasetLoader(ANLIDatasetLoader):
         valid_batch_idxs = range(1)
 
         super().__init__(dataset_name, source_dataset_name, dataset_version, has_valid, split_map,
-                 batch_size, train_batch_idxs, test_batch_idxs, valid_batch_idxs=valid_batch_idxs)
+                batch_size, train_batch_idxs, test_batch_idxs, valid_batch_idxs=valid_batch_idxs)
 
 
 
@@ -492,8 +344,6 @@ if __name__ == '__main__':
 
     if args.dataset == 'cqa':
         dataset_loader = CQADatasetLoader()
-    elif args.dataset == 'svamp':
-        dataset_loader = SVAMPDatasetLoader()
     elif args.dataset == 'esnli':
         dataset_loader = ESNLIDatasetLoader()
     elif args.dataset == 'anli1':

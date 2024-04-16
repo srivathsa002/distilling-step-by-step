@@ -15,11 +15,11 @@
 
 import argparse
 
-from datasets import DatasetDict, concatenate_datasets
+from datasets import DatasetDict
 from transformers import AutoTokenizer
 
-from data_utils import CQADatasetLoader, SVAMPDatasetLoader, ESNLIDatasetLoader, ANLI1DatasetLoader, ASDivDatasetLoader
-from metrics import compute_text_acc, compute_equation_acc, compute_metrics_text, compute_metrics_equation, compute_metrics_text_aux, compute_metrics_equation_aux
+from data_utils import CQADatasetLoader, ESNLIDatasetLoader, ANLI1DatasetLoader
+from metrics import compute_text_acc, compute_metrics_text, compute_metrics_text_aux
 from train_utils import train_and_evaluate
 
 
@@ -27,46 +27,20 @@ def run(args):
     #### Prepare datasets
     if args.dataset == 'cqa':
         dataset_loader = CQADatasetLoader()
-    elif args.dataset == 'svamp':
-        dataset_loader = SVAMPDatasetLoader()
     elif args.dataset == 'esnli':
         dataset_loader = ESNLIDatasetLoader()
     elif args.dataset == 'anli1':
         dataset_loader = ANLI1DatasetLoader()
-    elif args.dataset == 'asdiv':  # NOTE: for augmenting SVAMP only
-        dataset_loader = SVAMPDatasetLoader()
-        dataset_loader_svamp = SVAMPDatasetLoader()
-        dataset_loader_asdiv = ASDivDatasetLoader()
     else:
         raise ValueError
 
-    if args.dataset == 'asdiv':
-        datasets_svamp = dataset_loader_svamp.load_from_json()
-        datasets_asdiv = dataset_loader_asdiv.load_from_json()
-        datasets = DatasetDict({
-            'train': concatenate_datasets([datasets_svamp['train'], datasets_asdiv['train']]),
-            'test': datasets_svamp['test']
-        })
-    else:
-        datasets = dataset_loader.load_from_json()
+    datasets = dataset_loader.load_from_json()
 
     if args.llm is None:
         pass
     elif args.llm == 'palm':
-        if args.dataset == 'asdiv':
-            # training set = SVAMP training + ASDiv training
-            train_llm_rationales_svamp, train_llm_labels_svamp = dataset_loader_svamp.load_llm_preds(split='train')
-            train_llm_rationales_asdiv, train_llm_labels_asdiv = dataset_loader_asdiv.load_llm_preds(split='train')
-            train_llm_rationales = train_llm_rationales_svamp + train_llm_rationales_asdiv
-            train_llm_labels = train_llm_labels_svamp + train_llm_labels_asdiv
-            # test set = SVAMP test
-            test_llm_rationales, test_llm_labels = dataset_loader_svamp.load_llm_preds(split='test')
-        else:
-            train_llm_rationales, train_llm_labels = dataset_loader.load_llm_preds(split='train')
-            test_llm_rationales, test_llm_labels = dataset_loader.load_llm_preds(split='test')
-    elif args.llm == 'gpt':
-        train_llm_rationales, train_llm_labels = dataset_loader.load_gpt_preds(split='train')
-        test_llm_rationales, test_llm_labels = dataset_loader.load_gpt_preds(split='test')
+        train_llm_rationales, train_llm_labels = dataset_loader.load_llm_preds(split='train')
+        test_llm_rationales, test_llm_labels = dataset_loader.load_llm_preds(split='test')
     else:
         raise ValueError
 
@@ -84,8 +58,6 @@ def run(args):
             pass
         elif args.llm == 'palm':
             valid_llm_rationales, valid_llm_labels = dataset_loader.load_llm_preds(split='valid')
-        elif args.llm == 'gpt':
-            valid_llm_rationales, valid_llm_labels = dataset_loader.load_gpt_preds(split='valid')
         else:
             raise ValueError
 
@@ -103,13 +75,9 @@ def run(args):
     if args.label_type == 'gt':
         pass
     elif args.label_type == 'llm' and args.llm is not None:
-        if args.dataset not in ['svamp', 'asdiv']:
-            train_label_acc = compute_text_acc(datasets['train']['llm_label'], datasets['train']['label'])
-            test_label_acc = compute_text_acc(datasets['test']['llm_label'], datasets['test']['label'])
-        else:
-            train_label_acc = compute_equation_acc(datasets['train']['llm_label'], datasets['train']['label'])
-            test_label_acc = compute_equation_acc(datasets['test']['llm_label'], datasets['test']['label'])
-
+        train_label_acc = compute_text_acc(datasets['train']['llm_label'], datasets['train']['label'])
+        test_label_acc = compute_text_acc(datasets['test']['llm_label'], datasets['test']['label'])
+        
         print(f'LLM Train Acc: {train_label_acc:.4f}')
         print(f'LLM Test Acc: {test_label_acc:.4f}')
 
@@ -185,16 +153,10 @@ def run(args):
 
 
     if args.model_type == 'standard':
-        if args.dataset not in ['svamp', 'asdiv']:
-            compute_metrics = compute_metrics_text_aux(tokenizer)
-        else:
-            compute_metrics = compute_metrics_equation_aux(tokenizer)
+        compute_metrics = compute_metrics_text_aux(tokenizer)
 
     else:
-        if args.dataset not in ['svamp', 'asdiv']:
-            compute_metrics = compute_metrics_text(tokenizer)
-        else:
-            compute_metrics = compute_metrics_equation(tokenizer)
+        compute_metrics = compute_metrics_text(tokenizer)
 
 
     train_and_evaluate(args, args.run, tokenizer, tokenized_datasets, compute_metrics)
