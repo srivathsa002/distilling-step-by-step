@@ -135,15 +135,15 @@ match file_name[:3]:
   case "cqa":
     df = get_df_from_file(file_name, "cqa")
     # print(df.columns)
-    df.to_json("cqa_telugu.json", orient='records', lines=True, force_ascii= False)
+    df.to_json("cqa_train_telugu.json", orient='records', lines=True, force_ascii= False)
 
   case "anl":
     df = get_df_from_file(file_name, "anl")
-    df.to_json("anli1_telugu.json", orient='records', lines=True, force_ascii= False)
+    df.to_json("anli1_train_telugu.json", orient='records', lines=True, force_ascii= False)
 
   case "esn":
     df = get_df_from_file(file_name, "esn")
-    df.to_json("esnli_telugu.json", orient='records', lines=True, force_ascii= False)
+    df.to_json("esnli_train_telugu.json", orient='records', lines=True, force_ascii= False)
 
   case _:
     print("Invalid file name. Check again.")
