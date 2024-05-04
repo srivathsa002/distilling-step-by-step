@@ -57,9 +57,9 @@ class DatasetLoader(object):
             datasets[v].to_json(f'{self.data_root}/{self.dataset_name}/{self.dataset_name}_{k}.json')
 
 
-    def load_from_json(self):
+    def load_from_json(self, language):
         data_files = {
-            'train': f'{self.data_root}/{self.dataset_name}/{self.dataset_name}_train.json',
+            'train': f'{self.data_root}/{self.dataset_name}/{self.dataset_name}_train_{language}.json',
             'test': f'{self.data_root}/{self.dataset_name}/{self.dataset_name}_test.json',
         }
 

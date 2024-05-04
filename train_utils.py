@@ -18,7 +18,7 @@ import shutil
 import logging
 
 from transformers import Seq2SeqTrainingArguments, Seq2SeqTrainer
-from transformers import T5ForConditionalGeneration
+from transformers import MT5ForConditionalGeneration
 from transformers import DataCollatorForSeq2Seq
 from transformers.trainer_utils import set_seed
 
@@ -32,7 +32,7 @@ def get_config_dir(args):
 def train_and_evaluate(args, run, tokenizer, tokenized_datasets, compute_metrics):
     set_seed(run)
 
-    model = T5ForConditionalGeneration.from_pretrained(args.from_pretrained)
+    model = MT5ForConditionalGeneration.from_pretrained(args.from_pretrained)
 
     if args.parallelize:
         model.parallelize()

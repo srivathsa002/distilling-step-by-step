@@ -30,7 +30,7 @@ unzip datasets.zip
 
 #### Args usages
 
-- `--from_pretrained`: `google/t5-v1_1-small`, `google/t5-v1_1-base`, `google/t5-v1_1-large`, `google/t5-v1_1-xxl`
+- `--from_pretrained`: `google/mt5-small`, `google/mt5-base`, `google/mt5-large`
 - `--dataset`: `esnli`, `anli1`, `cqa`
 - `--label_type`:
   - `--label_type gt`: Use GT label for training
@@ -47,6 +47,7 @@ unzip datasets.zip
   - `standard`: Standard finetuning (`--label_type gt`) or distillation (`--label_type llm`)
   - `task_prefix`: Distilling step-by-step
 - `--parallelize`: Model parallelism
+- `--language`: `hindi`, `telugu`
 
 #### Example usages
 
@@ -77,7 +78,11 @@ python run.py --from_pretrained google/t5-v1_1-base --dataset cqa --model_type t
 #### If you want to directly reproduce all the results, a bash file can be executed as below. Note that this includes dealing with all the combinations of above given commands, so will take very long time to run even on high capacity of GPUs.
 
 ```
-./execute.sh
+./execute_checkpoint1.sh
+```
+
+```
+./execute_checkpoint2.sh
 ```
 
 #### Some analysis done include performance of T5_base model on Ground Truth and LLM generated labels on varying sizes of training data.

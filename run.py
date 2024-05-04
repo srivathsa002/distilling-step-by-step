@@ -34,7 +34,7 @@ def run(args):
     else:
         raise ValueError
 
-    datasets = dataset_loader.load_from_json()
+    datasets = dataset_loader.load_from_json(args.language)
 
     if args.llm is None:
         pass
@@ -185,6 +185,7 @@ if __name__ == '__main__':
     parser.add_argument('--bf16', action='store_true')
     parser.add_argument('--no_log', action='store_true')
     parser.add_argument('--output_rationale', action='store_true')
+    parser.add_argument('--language', type=str, default='')
 
     args = parser.parse_args()
 
